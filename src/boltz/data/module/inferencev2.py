@@ -63,6 +63,9 @@ def load_input(
         structure = StructureV2.load(
             target_dir / record.id / f"pre_affinity_{record.id}.npz"
         )
+        if record.affinity and record.affinity.receptor_chain_id:
+            for i, asym_id in enumerate(structure.chains['asym_id']):
+                structure.mask[i] &= (asym_id == record.affinity.chain_id) | (asym_id in record.affinity.receptor_chain_id)
     else:
         structure = StructureV2.load(target_dir / f"{record.id}.npz")
 

@@ -560,6 +560,7 @@ class AffinityInfo:
 
     chain_id: int
     mw: float
+    receptor_chain_id: Optional[list[int]] = None
 
 
 @dataclass(frozen=True)

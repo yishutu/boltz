@@ -1061,6 +1061,10 @@ def parse_boltz_schema(  # noqa: C901, PLR0915, PLR0912
                 raise ValueError(msg)
 
             affinity_ligands.add(binder)
+            affinity_receptors =  prop["affinity"].get("receptor", [])
+            if isinstance(affinity_receptors, str):
+                affinity_receptors = [affinity_receptors]
+            affinity_receptors = set(affinity_receptors)
 
     # Check only one affinity ligand is present
     if len(affinity_ligands) > 1:
@@ -1295,6 +1299,7 @@ def parse_boltz_schema(  # noqa: C901, PLR0915, PLR0912
     chain_data = []
     protein_chains = set()
     affinity_info = None
+    receptor_chain_id = set()
 
     rdkit_bounds_constraint_data = []
     chiral_atom_constraint_data = []
@@ -1332,6 +1337,9 @@ def parse_boltz_schema(  # noqa: C901, PLR0915, PLR0912
                 chain_id=asym_id,
                 mw=chain.affinity_mw,
             )
+        
+        if chain_name in affinity_receptors:
+            receptor_chain_id.add(asym_id)
 
         # Find all copies of this chain in the assembly
         entity_id = int(chain.entity)
@@ -1737,6 +1745,13 @@ def parse_boltz_schema(  # noqa: C901, PLR0915, PLR0912
             entity_id=int(chain["entity_id"]),
         )
         chain_infos.append(chain_info)
+    
+    if isinstance(affinity_info, AffinityInfo) and receptor_chain_id:
+        affinity_info = AffinityInfo(
+            chain_id=affinity_info.chain_id,
+            mw=affinity_info.mw,
+            receptor_chain_id=list(receptor_chain_id),
+        )
 
     options = InferenceOptions(pocket_constraints=pocket_constraints)
     record = Record(
